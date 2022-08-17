@@ -376,7 +376,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       Fitness.getHistoryClient(activity!!.applicationContext, googleSignInAccount)
         .insertData(dataSet)
         .addOnSuccessListener {
-          Log.i("FLUTTER_HEALTH::SUCCESS", "DataSet added successfully!")
+          Log.i("FLUTTER_HEALTH::SUCCESS", ">>>> DataSet added successfully!")
           result.success(true)
         }
         .addOnFailureListener { e ->
