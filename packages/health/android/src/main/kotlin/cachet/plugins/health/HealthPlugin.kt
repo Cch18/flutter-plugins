@@ -366,9 +366,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       .add(dataPoint)
       .build()
 	
-	Log.d("dataType", "Value:" + dataType)
-    if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
-	  
+	Log.d("dataType", "Value:" + DataType.TYPE_SLEEP_SEGMENT)
+
+    if (dataType == DataType.TYPE_SLEEP_SEGMENT) {	  
       typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
     }
     val fitnessOptions = typesBuilder.build()
@@ -530,6 +530,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
 
     val type = call.argument<String>("dataTypeKey")!!
+	Log.d("type", "value:" + type)
+	Log.d("result", "value:" + result)
     val startTime = call.argument<Long>("startTime")!!
     val endTime = call.argument<Long>("endTime")!!
     // Look up data type and unit for the type key
