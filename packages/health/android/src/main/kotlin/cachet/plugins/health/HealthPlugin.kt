@@ -365,9 +365,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     val dataSet = DataSet.builder(dataSource)
       .add(dataPoint)
       .build()
-
+	
+	Log.d("dataType", "Value:" + dataType)
     if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
-	  Log.d("dataType", "Value:" + dataType)
+	  
       typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
     }
     val fitnessOptions = typesBuilder.build()
