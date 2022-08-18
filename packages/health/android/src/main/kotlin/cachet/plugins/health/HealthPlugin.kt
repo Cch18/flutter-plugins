@@ -562,7 +562,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       GoogleSignIn.getAccountForExtension(activity!!.applicationContext, fitnessOptions)
     // Handle data types
     when (dataType) {
-	  Log.d("line:", "562")
       DataType.TYPE_SLEEP_SEGMENT -> {
         // request to the sessions for sleep data
         val request = SessionReadRequest.Builder()
@@ -817,7 +816,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     for ((i, typeKey) in types.withIndex()) {
       val access = permissions[i]
-	  Log.d("Access Permission", "value:" + access)
+	  Log.d("Access Permission", "access")
       val dataType = keyToHealthDataType(typeKey)
       when (access) {
         0 -> typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_READ)
@@ -829,6 +828,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         else -> throw IllegalArgumentException("Unknown access type $access")
       }
       if (typeKey == SLEEP_ASLEEP || typeKey == SLEEP_AWAKE || typeKey == SLEEP_DEEP || typeKey == SLEEP_IN_BED || typeKey == WORKOUT) {
+	    Log.d("Line:", "832")
         typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
         when (access) {
           0 -> typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
