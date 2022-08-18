@@ -41,9 +41,14 @@ Note that for Android, the target phone **needs** to have [Google Fit](https://w
 | DISTANCE_DELTA              | METERS                  |         | yes         |                                                             |
 | MINDFULNESS                 | MINUTES                 | yes     |             |                                                             |
 | SLEEP_IN_BED                | MINUTES                 | yes     | yes         |                                                             |
-| SLEEP_ASLEEP                | MINUTES                 | yes     | yes         |                                                             |
+| SLEEP                       | MINUTES                 | yes     | yes         |                                                             |
 | AWAKE                       | MINUTES                 | yes     | yes         |                                                             |
+| OUT_OF_BED                  | MINUTES                 |     |   | yes         |                                                             |
 | SLEEP_DEEP                  | MINUTES                 |     |   | yes
+|                                                             |
+| SLEEP_REM                   | MINUTES                 |     |   | yes
+|                                                             |
+| SLEEP_LIGHT                 | MINUTES                 |     |   | yes
 |                                                             |
 | WATER                       | LITER                   | yes     | yes         | On Android water requires a 3rd party app to be registered. |
 | EXERCISE_TIME               | MINUTES                 | yes     |             |                                                             |

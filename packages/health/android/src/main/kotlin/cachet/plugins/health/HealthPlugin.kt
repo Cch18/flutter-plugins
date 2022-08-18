@@ -59,9 +59,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
   private var MOVE_MINUTES = "MOVE_MINUTES"
   private var DISTANCE_DELTA = "DISTANCE_DELTA"
   private var WATER = "WATER"
-  private var SLEEP_ASLEEP = "SLEEP_ASLEEP"
+  private var SLEEP = "SLEEP"
   private var AWAKE = "AWAKE"
+  private var OUT_OF_BED = "OUT_OF_BED"
   private var SLEEP_DEEP = "SLEEP_DEEP"
+  private var SLEEP_REM = "SLEEP_REM"
+  private var SLEEP_LIGHT = "SLEEP_LIGHT"
   private var SLEEP_IN_BED = "SLEEP_IN_BED"
   private var WORKOUT = "WORKOUT"
 
@@ -217,7 +220,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
   //         .addDataType(keyToHealthDataType(MOVE_MINUTES), FitnessOptions.ACCESS_READ)
   //         .addDataType(keyToHealthDataType(DISTANCE_DELTA), FitnessOptions.ACCESS_READ)
   //         .addDataType(keyToHealthDataType(WATER), FitnessOptions.ACCESS_READ)
-  //         .addDataType(keyToHealthDataType(SLEEP_ASLEEP), FitnessOptions.ACCESS_READ)
+  //         .addDataType(keyToHealthDataType(SLEEP), FitnessOptions.ACCESS_READ)
   //         .accessActivitySessions(FitnessOptions.ACCESS_READ)
   //         .accessSleepSessions(FitnessOptions.ACCESS_READ)
   //         .build()
@@ -270,9 +273,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       MOVE_MINUTES -> DataType.TYPE_MOVE_MINUTES
       DISTANCE_DELTA -> DataType.TYPE_DISTANCE_DELTA
       WATER -> DataType.TYPE_HYDRATION
-      SLEEP_ASLEEP -> DataType.TYPE_SLEEP_SEGMENT
+      SLEEP -> DataType.TYPE_SLEEP_SEGMENT
       AWAKE -> DataType.TYPE_SLEEP_SEGMENT
+	  OUT_OF_BED -> DataType.TYPE_SLEEP_SEGMENT
+	  SLEEP_LIGHT -> DataType.TYPE_SLEEP_SEGMENT
 	  SLEEP_DEEP -> DataType.TYPE_SLEEP_SEGMENT
+	  SLEEP_REM -> DataType.TYPE_SLEEP_SEGMENT
       SLEEP_IN_BED -> DataType.TYPE_SLEEP_SEGMENT
       WORKOUT -> DataType.TYPE_ACTIVITY_SEGMENT
       else -> throw IllegalArgumentException("Unsupported dataType: $type")
@@ -295,9 +301,12 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       MOVE_MINUTES -> Field.FIELD_DURATION
       DISTANCE_DELTA -> Field.FIELD_DISTANCE
       WATER -> Field.FIELD_VOLUME
-      SLEEP_ASLEEP -> Field.FIELD_SLEEP_SEGMENT_TYPE
+      SLEEP -> Field.FIELD_SLEEP_SEGMENT_TYPE
       AWAKE -> Field.FIELD_SLEEP_SEGMENT_TYPE
+	  OUT_OF_BED -> Field.FIELD_SLEEP_SEGMENT_TYPE
 	  SLEEP_DEEP -> Field.FIELD_SLEEP_SEGMENT_TYPE
+	  SLEEP_REM -> Field.FIELD_SLEEP_SEGMENT_TYPE
+	  SLEEP_LIGHT -> Field.FIELD_SLEEP_SEGMENT_TYPE
       SLEEP_IN_BED -> Field.FIELD_SLEEP_SEGMENT_TYPE
       WORKOUT -> Field.FIELD_ACTIVITY
       else -> throw IllegalArgumentException("Unsupported dataType: $type")
@@ -662,7 +671,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       for (session in response.sessions) {
 
         // Return sleep time in Minutes if requested ASLEEP data
-        if (type == SLEEP_ASLEEP) {
+        if (type == SLEEP) { // was asleep
           healthData.add(
             hashMapOf(
               "value" to session.getEndTime(TimeUnit.MINUTES) - session.getStartTime(TimeUnit.MINUTES),
@@ -675,7 +684,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
           )
         }
 
-        if (type == SLEEP_IN_BED) {
+        if (type == SLEEP_IN_BED) { 
           val dataSets = response.getDataSet(session)
 
           // If the sleep session has finer granularity sub-components, extract them:
@@ -684,7 +693,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
               for (dataPoint in dataSet.dataPoints) {
                 // searching OUT OF BED data
                 if (dataPoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE)
-                    .asInt() != 3
+                    .asInt() != 1 // 1 : awake
                 ) {
                   healthData.add(
                     hashMapOf(
@@ -744,11 +753,37 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
           }
         }
 		
+		if (type == OUT_OF_BED) {
+          val dataSets = response.getDataSet(session)
+          for (dataSet in dataSets) {
+            for (dataPoint in dataSet.dataPoints) {
+              // searching OUT_OF_BED data
+              if (dataPoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt() == 3) {
+                healthData.add(
+                  hashMapOf(
+                    "value" to dataPoint.getEndTime(TimeUnit.MINUTES) - dataPoint.getStartTime(
+                      TimeUnit.MINUTES
+                    ),
+                    "date_from" to dataPoint.getStartTime(TimeUnit.MILLISECONDS),
+                    "date_to" to dataPoint.getEndTime(TimeUnit.MILLISECONDS),
+                    "unit" to "MINUTES",
+                    "source_name" to (dataPoint.originalDataSource.appPackageName
+                      ?: (dataPoint.originalDataSource.device?.model
+                        ?: "unknown")),
+                    "source_id" to dataPoint.originalDataSource.streamIdentifier
+                  )
+                )
+              }
+            }
+          }
+        }
+		
+		
 		if (type == SLEEP_DEEP) {
           val dataSets = response.getDataSet(session)
           for (dataSet in dataSets) {
             for (dataPoint in dataSet.dataPoints) {
-              // searching SLEEP AWAKE data
+              // searching SLEEP SLEEP_DEEP data
               if (dataPoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt() == 5) {
                 healthData.add(
                   hashMapOf(
@@ -768,6 +803,56 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             }
           }
         }
+		if (type == SLEEP_REM) {
+          val dataSets = response.getDataSet(session)
+          for (dataSet in dataSets) {
+            for (dataPoint in dataSet.dataPoints) {
+              // searching SLEEP SLEEP_REM data
+              if (dataPoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt() == 6) {
+                healthData.add(
+                  hashMapOf(
+                    "value" to dataPoint.getEndTime(TimeUnit.MINUTES) - dataPoint.getStartTime(
+                      TimeUnit.MINUTES
+                    ),
+                    "date_from" to dataPoint.getStartTime(TimeUnit.MILLISECONDS),
+                    "date_to" to dataPoint.getEndTime(TimeUnit.MILLISECONDS),
+                    "unit" to "MINUTES",
+                    "source_name" to (dataPoint.originalDataSource.appPackageName
+                      ?: (dataPoint.originalDataSource.device?.model
+                        ?: "unknown")),
+                    "source_id" to dataPoint.originalDataSource.streamIdentifier
+                  )
+                )
+              }
+            }
+          }
+        }
+		
+		if (type == SLEEP_LIGHT) {
+          val dataSets = response.getDataSet(session)
+          for (dataSet in dataSets) {
+            for (dataPoint in dataSet.dataPoints) {
+              // searching SLEEP SLEEP_LIGHT data
+              if (dataPoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt() == 4) {
+                healthData.add(
+                  hashMapOf(
+                    "value" to dataPoint.getEndTime(TimeUnit.MINUTES) - dataPoint.getStartTime(
+                      TimeUnit.MINUTES
+                    ),
+                    "date_from" to dataPoint.getStartTime(TimeUnit.MILLISECONDS),
+                    "date_to" to dataPoint.getEndTime(TimeUnit.MILLISECONDS),
+                    "unit" to "MINUTES",
+                    "source_name" to (dataPoint.originalDataSource.appPackageName
+                      ?: (dataPoint.originalDataSource.device?.model
+                        ?: "unknown")),
+                    "source_id" to dataPoint.originalDataSource.streamIdentifier
+                  )
+                )
+              }
+            }
+          }
+        }
+		
       }
       activity!!.runOnUiThread { result.success(healthData) }
     }
@@ -831,7 +916,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         }
         else -> throw IllegalArgumentException("Unknown access type $access")
       }
-      if (typeKey == SLEEP_ASLEEP || typeKey == AWAKE || typeKey == SLEEP_DEEP || typeKey == SLEEP_IN_BED || typeKey == WORKOUT) {
+      if (typeKey == SLEEP || typeKey == AWAKE || typeKey == SLEEP_DEEP || typeKey == SLEEP_REM || typeKey == SLEEP_LIGHT || typeKey == SLEEP_IN_BED || typeKey == OUT_OF_BED || typeKey == WORKOUT) {
 	    Log.d("Line:", "832")
         typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
         when (access) {

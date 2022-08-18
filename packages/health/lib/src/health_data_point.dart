@@ -32,9 +32,12 @@ class HealthDataPoint {
         type == HealthDataType.HEADACHE_MODERATE ||
         type == HealthDataType.HEADACHE_SEVERE ||
         type == HealthDataType.SLEEP_IN_BED ||
-        type == HealthDataType.SLEEP_ASLEEP ||
+        type == HealthDataType.SLEEP ||
         type == HealthDataType.AWAKE || 
-		type == HealthDataType.SLEEP_DEEP) {
+		type == HealthDataType.OUT_OF_BED || 
+		type == HealthDataType.SLEEP_DEEP ||
+		type == HealthDataType.SLEEP_LIGHT ||
+		type == HealthDataType.SLEEP_REM) {
       this._value = _convertMinutes();
     }
   }
