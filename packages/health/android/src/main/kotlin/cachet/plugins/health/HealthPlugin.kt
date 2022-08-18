@@ -340,7 +340,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       return
     }
 
-    val type = call.argument<String>("dataTypeKey")!!
+    val type = call.argument<String>("dataTypeKey")!! //AWAKE, SLEEP, or SLEEP_LIGHT etc
     val startTime = call.argument<Long>("startTime")!!
     val endTime = call.argument<Long>("endTime")!!
     val value = call.argument<Float>("value")!!
@@ -349,10 +349,13 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     val dataType = keyToHealthDataType(type)
 	Log.d("HELLO", ">>>>>" + dataType)
     val field = getField(type)
-
+	Log.d("HELLO", ">>>>>" + dataType)
     val typesBuilder = FitnessOptions.builder()
     typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_WRITE)
-
+	Log.d("HealthPlugin:", activity!!.applicationContext)
+	Log.d("data source :", DataSource.TYPE_RAW)
+	Log.d("LocalDevice:", Device.getLocalDevice(activity!!.applicationContext))
+	Log.d("Context:", activity!!.applicationContext)
     val dataSource = DataSource.Builder()
       .setDataType(dataType)
       .setType(DataSource.TYPE_RAW)
@@ -382,9 +385,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 	Log.d("dataType", "Value:" + DataType.TYPE_SLEEP_SEGMENT)
 
     if (dataType == DataType.TYPE_SLEEP_SEGMENT) {	
-      Log.d("HELLO", "accessSleepSessions with FitnessOptions.ACCESS_READ")
-      typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
-	  //typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_WRITE)
+      Log.d("HELLO>>>", "accessSleepSessions with FitnessOptions.ACCESS_WRITE")
+      //typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
+	  typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_WRITE)
     }
     val fitnessOptions = typesBuilder.build()
     try {
