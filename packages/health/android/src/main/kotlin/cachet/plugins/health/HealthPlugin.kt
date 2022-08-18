@@ -906,6 +906,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     for ((i, typeKey) in types.withIndex()) {
       val access = permissions[i]
+	  Log.d("access:", access)
       val dataType = keyToHealthDataType(typeKey)
       when (access) {
         0 -> typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_READ)
@@ -917,7 +918,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         else -> throw IllegalArgumentException("Unknown access type $access")
       }
       if (typeKey == SLEEP || typeKey == AWAKE || typeKey == SLEEP_DEEP || typeKey == SLEEP_REM || typeKey == SLEEP_LIGHT || typeKey == SLEEP_IN_BED || typeKey == OUT_OF_BED || typeKey == WORKOUT) {
-	    Log.d("Line:", "832")
+
         typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
         when (access) {
           0 -> typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
