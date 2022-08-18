@@ -817,7 +817,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     for ((i, typeKey) in types.withIndex()) {
       val access = permissions[i]
-	  Log.d("Access Permission", "value:" + access.format.toString())
+	  Log.d("Access Permission", "value:" + access)
       val dataType = keyToHealthDataType(typeKey)
       when (access) {
         0 -> typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_READ)
