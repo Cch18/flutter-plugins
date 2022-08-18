@@ -538,7 +538,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     val type = call.argument<String>("dataTypeKey")!!
 	Log.d("type", "value:" + type)
-	Log.d("result", "value:" + result)
+	//Log.d("result", "value:" + result)
     val startTime = call.argument<Long>("startTime")!!
     val endTime = call.argument<Long>("endTime")!!
     // Look up data type and unit for the type key
@@ -549,8 +549,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     // Add special cases for accessing workouts or sleep data.
     if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
+	  Log.d("getData()", "552")
       typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
     } else if (dataType == DataType.TYPE_ACTIVITY_SEGMENT) {
+	  Log.d("getData()", "555")
       typesBuilder.accessActivitySessions(FitnessOptions.ACCESS_READ)
         .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
         .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
@@ -559,10 +561,14 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     val googleSignInAccount =
       GoogleSignIn.getAccountForExtension(activity!!.applicationContext, fitnessOptions)
+	Log.d("getData", "Handle data types...")
     // Handle data types
     when (dataType) {
+	
       DataType.TYPE_SLEEP_SEGMENT -> {
+	   Log.d("DataType:", "TYPE_SLEEP_SEGMENT ....")
         // request to the sessions for sleep data
+		Log.d("Action:", "request to the sessions for sleep data ....")
         val request = SessionReadRequest.Builder()
           .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
           .enableServerQueries()

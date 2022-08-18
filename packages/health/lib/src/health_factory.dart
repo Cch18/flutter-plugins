@@ -421,7 +421,7 @@ class HealthFactory {
         return 1;
       case HealthDataType.AWAKE:
         return 2;
-      case HealthDataType.AWAKE:
+      case HealthDataType.SLEEP_DEEP:
         return 5;
       case HealthDataType.HEADACHE_UNSPECIFIED:
         return 0;
