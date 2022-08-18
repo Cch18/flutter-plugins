@@ -352,7 +352,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 	Log.d("HELLO", ">>>>>" + dataType)
     val typesBuilder = FitnessOptions.builder()
     typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_WRITE)
-	Log.d("HealthPlugin:", activity!!.applicationContext)
+	Log.d("HealthPlugin:", activity!!.applicationContext.toString())
 	Log.d("data source :", DataSource.TYPE_RAW)
 	Log.d("LocalDevice:", Device.getLocalDevice(activity!!.applicationContext))
 	Log.d("Context:", activity!!.applicationContext)
