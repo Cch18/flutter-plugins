@@ -61,6 +61,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
   private var WATER = "WATER"
   private var SLEEP_ASLEEP = "SLEEP_ASLEEP"
   private var SLEEP_AWAKE = "SLEEP_AWAKE"
+  private var SLEEP_DEEP = "SLEEP_DEEP"
   private var SLEEP_IN_BED = "SLEEP_IN_BED"
   private var WORKOUT = "WORKOUT"
 
@@ -271,6 +272,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       WATER -> DataType.TYPE_HYDRATION
       SLEEP_ASLEEP -> DataType.TYPE_SLEEP_SEGMENT
       SLEEP_AWAKE -> DataType.TYPE_SLEEP_SEGMENT
+	  SLEEP_DEEP -> DataType.TYPE_SLEEP_SEGMENT
       SLEEP_IN_BED -> DataType.TYPE_SLEEP_SEGMENT
       WORKOUT -> DataType.TYPE_ACTIVITY_SEGMENT
       else -> throw IllegalArgumentException("Unsupported dataType: $type")
@@ -295,6 +297,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       WATER -> Field.FIELD_VOLUME
       SLEEP_ASLEEP -> Field.FIELD_SLEEP_SEGMENT_TYPE
       SLEEP_AWAKE -> Field.FIELD_SLEEP_SEGMENT_TYPE
+	  SLEEP_DEEP -> Field.FIELD_SLEEP_SEGMENT_TYPE
       SLEEP_IN_BED -> Field.FIELD_SLEEP_SEGMENT_TYPE
       WORKOUT -> Field.FIELD_ACTIVITY
       else -> throw IllegalArgumentException("Unsupported dataType: $type")
@@ -730,6 +733,31 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
             }
           }
         }
+		
+		if (type == SLEEP_DEEP) {
+          val dataSets = response.getDataSet(session)
+          for (dataSet in dataSets) {
+            for (dataPoint in dataSet.dataPoints) {
+              // searching SLEEP AWAKE data
+              if (dataPoint.getValue(Field.FIELD_SLEEP_SEGMENT_TYPE).asInt() == 5) {
+                healthData.add(
+                  hashMapOf(
+                    "value" to dataPoint.getEndTime(TimeUnit.MINUTES) - dataPoint.getStartTime(
+                      TimeUnit.MINUTES
+                    ),
+                    "date_from" to dataPoint.getStartTime(TimeUnit.MILLISECONDS),
+                    "date_to" to dataPoint.getEndTime(TimeUnit.MILLISECONDS),
+                    "unit" to "MINUTES",
+                    "source_name" to (dataPoint.originalDataSource.appPackageName
+                      ?: (dataPoint.originalDataSource.device?.model
+                        ?: "unknown")),
+                    "source_id" to dataPoint.originalDataSource.streamIdentifier
+                  )
+                )
+              }
+            }
+          }
+        }
       }
       activity!!.runOnUiThread { result.success(healthData) }
     }
@@ -783,6 +811,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     for ((i, typeKey) in types.withIndex()) {
       val access = permissions[i]
+	  Log.d("Access Permission", "value:" + access.format.toString())
       val dataType = keyToHealthDataType(typeKey)
       when (access) {
         0 -> typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_READ)
@@ -793,7 +822,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         }
         else -> throw IllegalArgumentException("Unknown access type $access")
       }
-      if (typeKey == SLEEP_ASLEEP || typeKey == SLEEP_AWAKE || typeKey == SLEEP_IN_BED || typeKey == WORKOUT) {
+      if (typeKey == SLEEP_ASLEEP || typeKey == SLEEP_AWAKE || typeKey == SLEEP_DEEP || typeKey == SLEEP_IN_BED || typeKey == WORKOUT) {
         typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
         when (access) {
           0 -> typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
