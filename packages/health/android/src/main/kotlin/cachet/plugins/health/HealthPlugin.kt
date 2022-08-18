@@ -60,7 +60,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
   private var DISTANCE_DELTA = "DISTANCE_DELTA"
   private var WATER = "WATER"
   private var SLEEP_ASLEEP = "SLEEP_ASLEEP"
-  private var SLEEP_AWAKE = "SLEEP_AWAKE"
+  private var AWAKE = "AWAKE"
   private var SLEEP_DEEP = "SLEEP_DEEP"
   private var SLEEP_IN_BED = "SLEEP_IN_BED"
   private var WORKOUT = "WORKOUT"
@@ -271,7 +271,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       DISTANCE_DELTA -> DataType.TYPE_DISTANCE_DELTA
       WATER -> DataType.TYPE_HYDRATION
       SLEEP_ASLEEP -> DataType.TYPE_SLEEP_SEGMENT
-      SLEEP_AWAKE -> DataType.TYPE_SLEEP_SEGMENT
+      AWAKE -> DataType.TYPE_SLEEP_SEGMENT
 	  SLEEP_DEEP -> DataType.TYPE_SLEEP_SEGMENT
       SLEEP_IN_BED -> DataType.TYPE_SLEEP_SEGMENT
       WORKOUT -> DataType.TYPE_ACTIVITY_SEGMENT
@@ -296,7 +296,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       DISTANCE_DELTA -> Field.FIELD_DISTANCE
       WATER -> Field.FIELD_VOLUME
       SLEEP_ASLEEP -> Field.FIELD_SLEEP_SEGMENT_TYPE
-      SLEEP_AWAKE -> Field.FIELD_SLEEP_SEGMENT_TYPE
+      AWAKE -> Field.FIELD_SLEEP_SEGMENT_TYPE
 	  SLEEP_DEEP -> Field.FIELD_SLEEP_SEGMENT_TYPE
       SLEEP_IN_BED -> Field.FIELD_SLEEP_SEGMENT_TYPE
       WORKOUT -> Field.FIELD_ACTIVITY
@@ -549,7 +549,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     // Add special cases for accessing workouts or sleep data.
     if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
-	  Log.d("line:", "551")
       typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
     } else if (dataType == DataType.TYPE_ACTIVITY_SEGMENT) {
       typesBuilder.accessActivitySessions(FitnessOptions.ACCESS_READ)
@@ -714,7 +713,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
           }
         }
 
-        if (type == SLEEP_AWAKE) {
+        if (type == AWAKE) {
           val dataSets = response.getDataSet(session)
           for (dataSet in dataSets) {
             for (dataPoint in dataSet.dataPoints) {
@@ -816,7 +815,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     for ((i, typeKey) in types.withIndex()) {
       val access = permissions[i]
-	  Log.d("Access Permission", "access")
       val dataType = keyToHealthDataType(typeKey)
       when (access) {
         0 -> typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_READ)
@@ -827,7 +825,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         }
         else -> throw IllegalArgumentException("Unknown access type $access")
       }
-      if (typeKey == SLEEP_ASLEEP || typeKey == SLEEP_AWAKE || typeKey == SLEEP_DEEP || typeKey == SLEEP_IN_BED || typeKey == WORKOUT) {
+      if (typeKey == SLEEP_ASLEEP || typeKey == AWAKE || typeKey == SLEEP_DEEP || typeKey == SLEEP_IN_BED || typeKey == WORKOUT) {
 	    Log.d("Line:", "832")
         typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
         when (access) {
