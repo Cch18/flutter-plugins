@@ -362,7 +362,8 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       .setDevice(Device.getLocalDevice(activity!!.applicationContext))
       .setAppPackageName(activity!!.applicationContext)
       .build()
-
+	
+	
     val builder = if (startTime == endTime)
       DataPoint.builder(dataSource)
         .setTimestamp(startTime, TimeUnit.MILLISECONDS)
@@ -385,9 +386,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 	Log.d("dataType", "Value:" + DataType.TYPE_SLEEP_SEGMENT)
 
     if (dataType == DataType.TYPE_SLEEP_SEGMENT) {	
-      Log.d("HELLO>>>", "accessSleepSessions with FitnessOptions.ACCESS_WRITE")
-      //typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
-	  typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_WRITE)
+      Log.d("HELLO>>>", "accessSleepSessions with FitnessOptions.ACCESS_READ")
+      typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
+	  //typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_WRITE)
     }
     val fitnessOptions = typesBuilder.build()
     try {
