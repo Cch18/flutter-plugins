@@ -226,7 +226,7 @@ class HealthFactory {
         type == HealthDataType.HEADACHE_UNSPECIFIED) {
       value = _alignValue(type).toDouble();
     }
-	print('## health_factry.dart : ${type.typeToString()}');
+	
     Map<String, dynamic> args = {
       'value': value,
       'dataTypeKey': type.typeToString(),
@@ -234,6 +234,7 @@ class HealthFactory {
       'startTime': startTime.millisecondsSinceEpoch,
       'endTime': endTime.millisecondsSinceEpoch
     };
+	
     bool? success = await _channel.invokeMethod('writeData', args);
     return success ?? false;
   }

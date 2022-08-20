@@ -344,18 +344,23 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     val startTime = call.argument<Long>("startTime")!!
     val endTime = call.argument<Long>("endTime")!!
     val value = call.argument<Float>("value")!!
-
     // Look up data type and unit for the type key
     val dataType = keyToHealthDataType(type)
-	Log.d("HELLO", ">>>>>" + dataType)
+	Log.d("writeData() :", "startTime:" + startTime)
+	Log.d("writeData() :", "endTime:" + endTime)
+	Log.d("writeData() :", "value:" + value)
+	Log.d("writeData() :", "dataType:" + dataType)
     val field = getField(type)
-	Log.d("HELLO", ">>>>>" + dataType)
+	Log.d("writeData() :", "field:"+ field)
     val typesBuilder = FitnessOptions.builder()
+	Log.d("writeData() :", "typesBuilder addDataType : "+ dataType)
     typesBuilder.addDataType(dataType, FitnessOptions.ACCESS_WRITE)
-	Log.d("HealthPlugin:", activity!!.applicationContext.toString())
-	Log.d("data source :", DataSource.TYPE_RAW.toString())
-	Log.d("LocalDevice:", Device.getLocalDevice(activity!!.applicationContext).toString())
+	Log.d("writeData() :", "activity applicationContext: " + activity!!.applicationContext.toString())
+	Log.d("writeData() :", "data Source: " + DataSource.TYPE_RAW.toString())
+	Log.d("writeData() :", "LocalDevice: " + Device.getLocalDevice(activity!!.applicationContext).toString())
 	Log.d("Context:", activity!!.applicationContext.toString())
+	
+	// Create a data session
     val dataSource = DataSource.Builder()
       .setDataType(dataType)
       .setType(DataSource.TYPE_RAW)
@@ -374,6 +379,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     // Conversion is needed because glucose is stored as mmoll in Google Fit;
     // while mgdl is used for glucose in this plugin.
     val isGlucose = field == HealthFields.FIELD_BLOOD_GLUCOSE_LEVEL
+	Log.d("writeData() :", "field:"+ field)
     val dataPoint = if (!isIntField(dataSource, field))
       builder.setField(field, (if (!isGlucose) value else (value / MMOLL_2_MGDL).toFloat()))
         .build() else
@@ -422,7 +428,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     val totalDistance = call.argument<Int>("totalDistance")
 
     val activityType = getActivityType(type)
-
+	// start creating dataset
     // Create the Activity Segment DataSource
     val activitySegmentDataSource = DataSource.Builder()
       .setAppPackageName(activity!!.packageName)
@@ -435,6 +441,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
       .setActivityField(Field.FIELD_ACTIVITY, activityType)
       .build()
+	  
     // Add DataPoint to DataSet
     val activitySegments = DataSet.builder(activitySegmentDataSource)
       .add(activityDataPoint)
@@ -482,6 +489,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
 
     // Finish session setup
+	
+	
+	// start Write sleep session
     val session = Session.Builder()
       .setName(activityType) // TODO: Make a sensible name / allow user to set name
       .setDescription("")
@@ -541,7 +551,100 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     }
   }
 
-
+//  private fun writeSleepData(call: MethodCall, result: Result) {
+//    if (activity == null) {
+//      result.success(false)
+//      return
+//    }
+//
+//    val type = call.argument<String>("activityType")!!
+//    val startTime = call.argument<Long>("startTime")!!
+//    val endTime = call.argument<Long>("endTime")!!
+//    val totalEnergyBurned = call.argument<Int>("totalEnergyBurned")
+//    val totalDistance = call.argument<Int>("totalDistance")
+//
+//    val activityType = getActivityType(type)
+//
+//    // Create the Activity Segment DataSource
+//    val activitySegmentDataSource = DataSource.Builder()
+//      .setAppPackageName(activity!!.packageName)
+//      .setDataType(DataType.TYPE_ACTIVITY_SEGMENT)
+//      .setStreamName("FLUTTER_HEALTH - Activity")
+//      .setType(DataSource.TYPE_RAW)
+//      .build()
+//    // Create the Activity Segment
+//    val activityDataPoint = DataPoint.builder(activitySegmentDataSource)
+//      .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
+//      .setActivityField(Field.FIELD_ACTIVITY, activityType)
+//      .build()
+//
+//    // Add DataPoint to DataSet
+//    val activitySegments = DataSet.builder(activitySegmentDataSource)
+//      .add(activityDataPoint)
+//      .build()
+//
+//
+//
+//    // Finish session setup
+//    val session = Session.Builder()
+//      .setName(activityType) // TODO: Make a sensible name / allow user to set name
+//      .setDescription("")
+//      .setIdentifier(UUID.randomUUID().toString())
+//      .setActivity(activityType)
+//      .setStartTime(startTime, TimeUnit.MILLISECONDS)
+//      .setEndTime(endTime, TimeUnit.MILLISECONDS)
+//      .build()
+//    // Build a session and add the values provided
+//    val sessionInsertRequestBuilder = SessionInsertRequest.Builder()
+//      .setSession(session)
+//      .addDataSet(activitySegments)
+//    if (totalDistance != null) {
+//      sessionInsertRequestBuilder.addDataSet(distanceDataSet!!)
+//    }
+//    if (totalEnergyBurned != null) {
+//      sessionInsertRequestBuilder.addDataSet(energyDataSet!!)
+//    }
+//    val insertRequest = sessionInsertRequestBuilder.build()
+//
+//    val fitnessOptionsBuilder = FitnessOptions.builder()
+//      .addDataType(DataType.TYPE_ACTIVITY_SEGMENT, FitnessOptions.ACCESS_WRITE)
+//    if (totalDistance != null) {
+//      fitnessOptionsBuilder.addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_WRITE)
+//    }
+//    if (totalEnergyBurned != null) {
+//      fitnessOptionsBuilder.addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_WRITE)
+//    }
+//    val fitnessOptions = fitnessOptionsBuilder.build()
+//
+//    try {
+//      val googleSignInAccount =
+//        GoogleSignIn.getAccountForExtension(activity!!.applicationContext, fitnessOptions)
+//      if (!GoogleSignIn.hasPermissions(googleSignInAccount, fitnessOptions)) {
+//        GoogleSignIn.requestPermissions(
+//          activity!!,
+//          GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+//          googleSignInAccount,
+//          fitnessOptions
+//        )
+//      }
+//      Fitness.getSessionsClient(
+//        activity!!.applicationContext,
+//        GoogleSignIn.getAccountForExtension(activity!!.applicationContext, fitnessOptions)
+//      )
+//        .insertSession(insertRequest)
+//        .addOnSuccessListener {
+//          Log.i("FLUTTER_HEALTH::SUCCESS", "Sleep was successfully added!")
+//          result.success(true)
+//        }
+//        .addOnFailureListener { e ->
+//          Log.w("FLUTTER_HEALTH::ERROR", "There was a problem adding the Sleep: ", e)
+//          result.success(false)
+//        }
+//    } catch (e: Exception) {
+//      result.success(false)
+//    }
+//  }
+//
   private fun getData(call: MethodCall, result: Result) {
     Log.d("func:", "getData()")
     if (activity == null) {
@@ -562,10 +665,10 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     // Add special cases for accessing workouts or sleep data.
     if (dataType == DataType.TYPE_SLEEP_SEGMENT) {
-	  Log.d("getData()", "552")
+	  Log.d("getData()", "Line 552")
       typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
     } else if (dataType == DataType.TYPE_ACTIVITY_SEGMENT) {
-	  Log.d("getData()", "555")
+	  Log.d("getData()", "Line 555")
       typesBuilder.accessActivitySessions(FitnessOptions.ACCESS_READ)
         .addDataType(DataType.TYPE_CALORIES_EXPENDED, FitnessOptions.ACCESS_READ)
         .addDataType(DataType.TYPE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
@@ -574,7 +677,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
     val googleSignInAccount =
       GoogleSignIn.getAccountForExtension(activity!!.applicationContext, fitnessOptions)
-	Log.d("getData", "Handle data types...")
+		Log.d("getData", "Handle data types...")
     // Handle data types
     when (dataType) {
 	
@@ -595,6 +698,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 
       }
       DataType.TYPE_ACTIVITY_SEGMENT -> {
+		Log.d("DataType:", "TYPE_ACTIVITY_SEGMENT ....")
         val readRequest: SessionReadRequest
         val readRequestBuilder = SessionReadRequest.Builder()
             .setTimeInterval(startTime, endTime, TimeUnit.MILLISECONDS)
@@ -630,6 +734,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
           .addOnFailureListener(errHandler(result))
       }
       else -> {
+		Log.d("DataType:", "others ....")
+		Log.d("field: ", "value:" + field )
+		
         Fitness.getHistoryClient(activity!!.applicationContext, googleSignInAccount)
           .readData(
             DataReadRequest.Builder()
@@ -1024,7 +1131,54 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       )
 
   }
+  
 
+
+
+//  private fun SetSleepGranularity(call: MethodCall, result: Result) {
+//    val activity = activity ?: return
+//	  val startTime = call.argument<Long>("startTime")!!
+ //   val endTime = call.argument<Long>("endTime")!!
+//    val dataSource = DataSource.Builder()
+//		.setType(DataSource.TYPE_RAW)
+//		.setDataType(DataType.TYPE_SLEEP_SEGMENT)
+//		.setAppPackageName(activity)
+		// Optional but recommended for identifying the stream if you have multiple streams with the same dataType.
+//		.setStreamName("merged")
+//		.build()
+	
+//	val dataPoints = listOf(
+//		DataPoint.builder(dataSource)
+//			.setTimeInterval(startTime, endTime1, TimeUnit.MILLISECONDS)
+//			.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_LIGHT)
+//			.build(),
+//		DataPoint.builder(dataSource)
+//			.setTimeInterval(startTime2, endTime2, TimeUnit.MILLISECONDS)
+//			.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_DEEP)
+//			.build(),
+//		DataPoint.builder(dataSource)
+//			.setTimeInterval(startTime3, endTime3, TimeUnit.MILLISECONDS)
+//			.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_LIGHT)
+//			.build(),
+//		DataPoint.builder(dataSource)
+//			.setTimeInterval(startTime4, endTime4, TimeUnit.MILLISECONDS)
+//			.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_REM)
+//			.build(),
+//		DataPoint.builder(dataSource)
+//			.setTimeInterval(startTime5, endTime5, TimeUnit.MILLISECONDS)
+//			.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.AWAKE)
+//			.build(),
+//		DataPoint.builder(dataSource)
+//			.setTimeInterval(startTime6, endTime6, TimeUnit.MILLISECONDS)
+//			.setField(Field.FIELD_SLEEP_SEGMENT_TYPE, SleepStages.SLEEP_LIGHT)
+//			.build()
+//	)
+
+//	val dataSet = DataSet.builder(dataSource)
+//		.addAll(dataPoints)
+//		.build()
+//	
+  //}
 
   private fun getStepsInRange(
     start: Long,
@@ -1039,6 +1193,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         val dp = bucket.dataSets.firstOrNull()?.dataPoints?.firstOrNull()
         if (dp != null) {
           print(dp)
+		  Log.d("dp ", "val: "dp)
 
           val count = dp.getValue(aggregatedDataType.fields[0])
 
@@ -1071,6 +1226,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       "getData" -> getData(call, result)
       "writeData" -> writeData(call, result)
       "getTotalStepsInInterval" -> getTotalStepsInInterval(call, result)
+	  //"SetSleepGranularity" -> SetSleepGranularity(call, result)
       "hasPermissions" -> hasPermissions(call, result)
       "writeWorkoutData" -> writeWorkoutData(call, result)
       else -> result.notImplemented()
