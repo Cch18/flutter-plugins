@@ -428,6 +428,14 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       }
     }
   }
+  fun DataPoint.getStartTimeString() = Instant.ofEpochSecond(this.getStartTime(TimeUnit.SECONDS))
+    .atZone(ZoneId.systemDefault())
+    .toLocalDateTime().toString()
+
+  fun DataPoint.getEndTimeString() = Instant.ofEpochSecond(this.getEndTime(TimeUnit.SECONDS))
+    .atZone(ZoneId.systemDefault())
+    .toLocalDateTime().toString()
+
   private fun writeWorkoutData(call: MethodCall, result: Result) {
     if (activity == null) {
       result.success(false)
