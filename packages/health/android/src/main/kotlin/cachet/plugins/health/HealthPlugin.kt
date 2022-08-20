@@ -367,8 +367,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       .setDevice(Device.getLocalDevice(activity!!.applicationContext))
       .setAppPackageName(activity!!.applicationContext)
       .build()
-	
-	
+
     val builder = if (startTime == endTime)
       DataPoint.builder(dataSource)
         .setTimestamp(startTime, TimeUnit.MILLISECONDS)
@@ -392,7 +391,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
 	Log.d("dataType", "Value:" + DataType.TYPE_SLEEP_SEGMENT)
 
     if (dataType == DataType.TYPE_SLEEP_SEGMENT) {	
-      Log.d("HELLO>>>", "accessSleepSessions with FitnessOptions.ACCESS_READ")
+      Log.d("writeData(): ", "accessSleepSessions with FitnessOptions.ACCESS_READ")
       typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_READ)
 	  //typesBuilder.accessSleepSessions(FitnessOptions.ACCESS_WRITE)
     }
@@ -404,6 +403,9 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
         .insertData(dataSet)
         .addOnSuccessListener {
           Log.i("FLUTTER_HEALTH::SUCCESS", ">>>> DataSet added successfully!")
+          for (dataSet in response.buckets.flatMap { it.dataSets }) {
+            dumpDataSet(dataSet)
+          }
           result.success(true)
         }
         .addOnFailureListener { e ->
@@ -414,7 +416,18 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       result.success(false)
     }
   }
-
+  fun dumpDataSet(dataSet: DataSet) {
+    Log.i(TAG, "Data returned for Data type: ${dataSet.dataType.name}")
+    for (dp in dataSet.dataPoints) {
+      Log.i(TAG,"Data point:")
+      Log.i(TAG,"\tType: ${dp.dataType.name}")
+      Log.i(TAG,"\tStart: ${dp.getStartTimeString()}")
+      Log.i(TAG,"\tEnd: ${dp.getEndTimeString()}")
+      for (field in dp.dataType.fields) {
+        Log.i(TAG,"\tField: ${field.name.toString()} Value: ${dp.getValue(field)}")
+      }
+    }
+  }
   private fun writeWorkoutData(call: MethodCall, result: Result) {
     if (activity == null) {
       result.success(false)
@@ -1131,9 +1144,6 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       )
 
   }
-  
-
-
 
 //  private fun SetSleepGranularity(call: MethodCall, result: Result) {
 //    val activity = activity ?: return
@@ -1187,7 +1197,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
     result: Result
   ) =
     OnSuccessListener { response: DataReadResponse ->
-
+      Log.d("getStepsInRange()", "running..")
       val map = HashMap<Long, Int>() // need to return to Dart so can't use sparse array
       for (bucket in response.buckets) {
         val dp = bucket.dataSets.firstOrNull()?.dataPoints?.firstOrNull()
