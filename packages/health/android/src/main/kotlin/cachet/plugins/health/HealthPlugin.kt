@@ -1192,8 +1192,7 @@ class HealthPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
       for (bucket in response.buckets) {
         val dp = bucket.dataSets.firstOrNull()?.dataPoints?.firstOrNull()
         if (dp != null) {
-          print(dp)
-		  Log.d("dp ", "val: "dp)
+          print("dp : ${dp}")
 
           val count = dp.getValue(aggregatedDataType.fields[0])
 
